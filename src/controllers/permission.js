@@ -10,20 +10,23 @@ const getAllPermissions = async () => {
 }
 
 const assignPermission = async (_, { permission, id }) => {
-
-    if (permission) {
-
-        const data = await Role.findByIdAndUpdate(id, {
-            permissions: permission
-        }, { new: true });
-        console.log(data)
-
-        return { message: 'updated successfully' };
-
-    } else {
-        throw Error('Permission is required')
+    if (!permission) {
+        throw new Error('Permission is required');
     }
 
-}
+    const data = await Role.findById(id);
+    if (!data) {
+        throw new Error('Role not found');
+    }
 
+    if (data.role_type === 'super_admin') {
+        throw new Error('Cannot update permissions for super_admin role');
+    }
+
+    data.permissions = permission;
+    await data.save();
+
+    console.log(data);
+    return { message: 'Updated successfully' };
+}
 module.exports = { getAllPermissions, assignPermission }
